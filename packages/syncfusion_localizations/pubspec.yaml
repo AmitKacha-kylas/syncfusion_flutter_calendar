@@ -6,7 +6,7 @@ homepage: https://github.com/syncfusion/flutter-widgets/tree/master/packages/syn
 
 environment:
   sdk: ^3.7.0
-  flutter: ">=3.35.1"
+  flutter: ">=3.32.8"
 
 dependencies:
   flutter:
