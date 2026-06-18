@@ -192,7 +192,6 @@ class InteractiveScrollViewerState extends State<InteractiveScrollViewer> {
           widget.transformationController!.value.clone()..translate(
             previousOffset.dx - offset.dx,
             previousOffset.dy - offset.dy,
-            0.0,
           );
     }
   }

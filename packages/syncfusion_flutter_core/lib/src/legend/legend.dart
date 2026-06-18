@@ -2164,28 +2164,26 @@ class __SolidBarLegendItemState extends State<_SolidBarLegendItem> {
       }
 
       if (widget.direction == Axis.horizontal) {
-        matrix4 =
-            Matrix4.identity()..translate(
-              widget.pointerController!.position!.dx *
-                      widget.segmentSize!.width -
-                  (widget.pointerSize!.width / 2),
-              0.0,
-              0.0,
-            );
+        matrix4 = Matrix4.identity()
+          ..translate(
+            widget.pointerController!.position!.dx *
+                    widget.segmentSize!.width -
+                (widget.pointerSize!.width / 2),
+            0.0,
+          );
         if (_textDirection == TextDirection.rtl) {
           matrix4.invert();
         }
         current = Transform(transform: matrix4, child: current);
       } else {
         current = RotatedBox(quarterTurns: 3, child: current);
-        matrix4 =
-            Matrix4.identity()..translate(
-              0.0,
-              widget.pointerController!.position!.dy *
-                      widget.segmentSize!.width -
-                  (widget.pointerSize!.width / 2),
-              0.0,
-            );
+        matrix4 = Matrix4.identity()
+          ..translate(
+            0.0,
+            widget.pointerController!.position!.dy *
+                    widget.segmentSize!.width -
+                (widget.pointerSize!.width / 2),
+          );
         current = Transform(transform: matrix4, child: current);
       }
     } else {
@@ -2754,26 +2752,24 @@ class _GradientBarLegendState extends State<_GradientBarLegend> {
       }
 
       if (_direction == Axis.horizontal) {
-        matrix4 =
-            Matrix4.identity()..translate(
-              widget.pointerController!.position!.dx * _segmentSize.width -
-                  (widget.pointerSize!.width / 2),
-              0.0,
-              0.0,
-            );
+        matrix4 = Matrix4.identity()
+          ..translate(
+            widget.pointerController!.position!.dx * _segmentSize.width -
+                (widget.pointerSize!.width / 2),
+            0.0,
+          );
         if (_isRTL) {
           matrix4.invert();
         }
         current = Transform(transform: matrix4, child: current);
       } else {
         current = RotatedBox(quarterTurns: 3, child: current);
-        matrix4 =
-            Matrix4.identity()..translate(
-              0.0,
-              widget.pointerController!.position!.dy * _segmentSize.height -
-                  (widget.pointerSize!.width / 2),
-              0.0,
-            );
+        matrix4 = Matrix4.identity()
+          ..translate(
+            0.0,
+            widget.pointerController!.position!.dy * _segmentSize.height -
+                (widget.pointerSize!.width / 2),
+          );
         current = Transform(transform: matrix4, child: current);
       }
     } else {
