@@ -14527,6 +14527,21 @@ class _TimeRulerView extends CustomPainter {
       timeSlotViewSettings.timeFormat,
     );
 
+    // Draw 12 AM label at first position for day/week views
+    if (!isTimelineView) {
+      _drawSingleTimeLabel(
+        canvas,
+        size,
+        date,
+        0, // i = 0 for 12 AM
+        hour,
+        0, // xPosition not used for day/week view
+        0, // Position at the top
+        timeTextStyle,
+        timeFormatStrings,
+      );
+    }
+
     /// For timeline view we will draw 24 lines where as in day, week and work
     /// week view we will draw 23 lines excluding the 12 AM, hence to rectify
     /// this the i value handled accordingly.
@@ -14636,6 +14651,92 @@ class _TimeRulerView extends CustomPainter {
         }
       }
     }
+
+    // Draw 12 AM label at last position for day/week views
+    if (!isTimelineView) {
+      final int lastI = horizontalLinesCount.toInt();
+      final double lastYPosition = size.height;
+      _drawSingleTimeLabel(
+        canvas,
+        size,
+        date,
+        lastI,
+        hour,
+        0, // xPosition not used for day/week view
+        lastYPosition,
+        timeTextStyle,
+        timeFormatStrings,
+      );
+    }
+  }
+
+  void _drawSingleTimeLabel(
+    Canvas canvas,
+    Size size,
+    DateTime baseDate,
+    int slotIndex,
+    double hour,
+    double xPosition,
+    double yPosition,
+    TextStyle timeTextStyle,
+    List<String> timeFormatStrings,
+  ) {
+    final int timeInterval = CalendarViewHelper.getTimeInterval(
+      timeSlotViewSettings,
+    );
+
+    final double minute = (slotIndex * timeInterval) + hour;
+    final int totalMinutes = minute.toInt();
+    int hours = timeSlotViewSettings.startHour.toInt() + (totalMinutes ~/ 60);
+    final int mins = totalMinutes % 60;
+    int dayOffset = 0;
+
+    if (hours >= 24) {
+      dayOffset = hours ~/ 24;
+      hours = hours % 24;
+    }
+
+    final DateTime dateTime = DateTime(
+      baseDate.year,
+      baseDate.month,
+      baseDate.day + dayOffset,
+      hours,
+      mins,
+    );
+
+    final String time = CalendarViewHelper.getLocalizedString(
+      dateTime,
+      timeFormatStrings,
+      locale,
+    );
+
+    final TextSpan span = TextSpan(text: time, style: timeTextStyle);
+    final double cellWidth = size.width;
+
+    _textPainter.text = span;
+    _textPainter.layout(maxWidth: cellWidth);
+
+    double startXPosition = (cellWidth - _textPainter.width) / 2;
+    if (startXPosition < 0) {
+      startXPosition = 0;
+    }
+
+    double startYPosition = yPosition;
+
+    // Ensure label is not clipped at top
+    if (startYPosition < 0) {
+      startYPosition = 0;
+    }
+
+    // Ensure label is not clipped at bottom
+    if (startYPosition + _textPainter.height > size.height) {
+      startYPosition = size.height - _textPainter.height;
+      if (startYPosition < 0) {
+        return; // Label is too large to fit, skip drawing
+      }
+    }
+
+    _textPainter.paint(canvas, Offset(startXPosition, startYPosition));
   }
 
   void _drawDashedLine(Canvas canvas, Offset start, Offset end) {
