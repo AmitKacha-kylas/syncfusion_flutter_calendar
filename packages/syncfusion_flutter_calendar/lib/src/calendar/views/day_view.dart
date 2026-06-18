@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -819,12 +821,32 @@ class _TimeSlotRenderObject extends CustomCalendarRenderObject {
     final double startXPosition = isRTL ? 0 : timeLabelWidth;
     final double endXPosition =
         isRTL ? size.width - timeLabelWidth : size.width;
+
+    final int timeInterval = CalendarViewHelper.getTimeInterval(
+      timeSlotViewSettings,
+    );
+    final double hour =
+        (timeSlotViewSettings.startHour -
+            timeSlotViewSettings.startHour.toInt()) *
+        60;
+
     for (int i = 1; i <= horizontalLinesCount; i++) {
-      canvas.drawLine(
-        Offset(startXPosition, y),
-        Offset(endXPosition, y),
-        _linePainter,
-      );
+      final double minute = (i * timeInterval) + hour;
+      final bool is30MinuteInterval = minute.toInt() % 60 == 30;
+
+      if (is30MinuteInterval) {
+        _drawDashedLineInGrid(
+          canvas,
+          Offset(startXPosition, y),
+          Offset(endXPosition, y),
+        );
+      } else {
+        canvas.drawLine(
+          Offset(startXPosition, y),
+          Offset(endXPosition, y),
+          _linePainter,
+        );
+      }
 
       y += timeIntervalHeight;
       if (y == size.height) {
@@ -871,6 +893,45 @@ class _TimeSlotRenderObject extends CustomCalendarRenderObject {
       ),
       _linePainter,
     );
+  }
+
+  void _drawDashedLineInGrid(Canvas canvas, Offset start, Offset end) {
+    const double dashWidth = 5.0;
+    const double dashGap = 5.0;
+    final Paint dashedPaint = Paint()
+      ..strokeWidth = 1.0
+      ..color = const Color(0xFFD9D9D9)
+      ..strokeCap = StrokeCap.round;
+
+    final double dx = end.dx - start.dx;
+    final double dy = end.dy - start.dy;
+    final double distance = math.sqrt(dx * dx + dy * dy);
+
+    if (distance == 0) {
+      return;
+    }
+
+    const double dashPeriod = dashWidth + dashGap;
+    final int dashCount = (distance / dashPeriod).ceil();
+
+    for (int i = 0; i < dashCount; i++) {
+      final double startDist = i * dashPeriod;
+      final double endDist = (i * dashPeriod + dashWidth).clamp(0, distance);
+
+      final double t1 = startDist / distance;
+      final double t2 = endDist / distance;
+
+      final Offset dashStart = Offset(
+        start.dx + dx * t1,
+        start.dy + dy * t1,
+      );
+      final Offset dashEnd = Offset(
+        start.dx + dx * t2,
+        start.dy + dy * t2,
+      );
+
+      canvas.drawLine(dashStart, dashEnd, dashedPaint);
+    }
   }
 
   void _addSpecialRegions(Canvas canvas) {

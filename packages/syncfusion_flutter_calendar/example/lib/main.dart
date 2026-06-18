@@ -29,14 +29,25 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SfCalendar(
-        view: CalendarView.month,
-        dataSource: MeetingDataSource(_getDataSource()),
-        // by default the month appointment display mode set as Indicator, we can
-        // change the display mode as appointment using the appointment display
-        // mode property
-        monthViewSettings: const MonthViewSettings(
-          appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Text("shoowww"),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: SfCalendar(
+                  timeSlotViewSettings: const TimeSlotViewSettings(
+                    timeInterval: Duration(minutes: 30),
+
+                    timeIntervalHeight: 90,
+                  ),
+                  dataSource: MeetingDataSource(_getDataSource()),
+
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

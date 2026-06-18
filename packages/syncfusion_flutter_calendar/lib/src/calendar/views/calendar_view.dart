@@ -9939,6 +9939,7 @@ class _CalendarViewState extends State<_CalendarView>
                           CalendarViewHelper.isTimelineView(widget.view),
                           widget.visibleDates,
                           widget.textScaleFactor,
+                          _currentTimeNotifier,
                         ),
                         size: Size(timeLabelWidth, height),
                       ),
@@ -10090,6 +10091,7 @@ class _CalendarViewState extends State<_CalendarView>
                     CalendarViewHelper.isTimelineView(widget.view),
                     widget.visibleDates,
                     widget.textScaleFactor,
+                    _currentTimeNotifier,
                   ),
                   size: Size(width, timeLabelSize),
                 ),
@@ -14421,7 +14423,8 @@ class _TimeRulerView extends CustomPainter {
     this.isTimelineView,
     this.visibleDates,
     this.textScaleFactor,
-  );
+    this.currentTimeNotifier,
+  ) : super(repaint: currentTimeNotifier);
 
   final double horizontalLinesCount;
   final double timeIntervalHeight;
@@ -14433,6 +14436,7 @@ class _TimeRulerView extends CustomPainter {
   final bool isTimelineView;
   final List<DateTime> visibleDates;
   final double textScaleFactor;
+  final ValueNotifier<int> currentTimeNotifier;
   final Paint _linePainter = Paint();
   final TextPainter _textPainter = TextPainter();
 
@@ -14585,7 +14589,24 @@ class _TimeRulerView extends CustomPainter {
             isRTL ? startXPosition - padding : startXPosition + padding;
       }
 
-      _textPainter.paint(canvas, Offset(startXPosition, startYPosition));
+      final bool is30MinuteInterval = minute.toInt() % 60 == 30;
+
+      // Extract time-of-day (minutes from start of day) from the full notifier value
+      final int currentTimeOfDay = currentTimeNotifier.value % (24 * 60);
+
+      // Check if this label's time is near current time (past or post)
+      final int labelTimeInMinutes = (timeSlotViewSettings.startHour.toInt() * 60) + minute.toInt();
+      final int timeDifference = labelTimeInMinutes - currentTimeOfDay;
+
+      // Separate conditions for past time and post time
+      final bool isPastTime = timeDifference < 0 && timeDifference.abs() <= 5;  // Hide 5 min before current time
+      final bool isPostTime = timeDifference > 0 && timeDifference <= 5;         // Hide 5 min after current time
+      final bool isNearCurrentTime = isPastTime || isPostTime;
+
+      // Show label only if it's not a 30-minute interval and not near current time
+      if (!is30MinuteInterval && !isNearCurrentTime) {
+        _textPainter.paint(canvas, Offset(startXPosition, startYPosition));
+      }
 
       if (!isTimelineView) {
         final Offset start = Offset(
@@ -14596,7 +14617,13 @@ class _TimeRulerView extends CustomPainter {
           isRTL ? startXPosition / 2 : size.width,
           yPosition,
         );
-        canvas.drawLine(start, end, _linePainter);
+
+        if (is30MinuteInterval) {
+          _drawDashedLine(canvas, start, end);
+        } else {
+          canvas.drawLine(start, end, _linePainter);
+        }
+
         yPosition += timeIntervalHeight;
         if (yPosition.round() == size.height.round()) {
           break;
@@ -14608,6 +14635,45 @@ class _TimeRulerView extends CustomPainter {
           xPosition += timeIntervalHeight;
         }
       }
+    }
+  }
+
+  void _drawDashedLine(Canvas canvas, Offset start, Offset end) {
+    const double dashWidth = 5.0;
+    const double dashGap = 5.0;
+    final Paint dashedPaint = Paint()
+      ..strokeWidth = 1
+      ..color = const Color(0xFFD9D9D9)
+      ..strokeCap = StrokeCap.round;
+
+    final double dx = end.dx - start.dx;
+    final double dy = end.dy - start.dy;
+    final double distance = math.sqrt(dx * dx + dy * dy);
+
+    if (distance == 0) {
+      return;
+    }
+
+    const double dashPeriod = dashWidth + dashGap;
+    final int dashCount = (distance / dashPeriod).ceil();
+
+    for (int i = 0; i < dashCount; i++) {
+      final double startDist = i * dashPeriod;
+      final double endDist = (i * dashPeriod + dashWidth).clamp(0, distance);
+
+      final double t1 = startDist / distance;
+      final double t2 = endDist / distance;
+
+      final Offset dashStart = Offset(
+        start.dx + dx * t1,
+        start.dy + dy * t1,
+      );
+      final Offset dashEnd = Offset(
+        start.dx + dx * t2,
+        start.dy + dy * t2,
+      );
+
+      canvas.drawLine(dashStart, dashEnd, dashedPaint);
     }
   }
 
@@ -14982,17 +15048,16 @@ class _CurrentTimeIndicator extends CustomPainter {
     );
     final Paint painter =
         Paint()
-          ..color = todayHighlightColor!
-          ..strokeWidth = 1
+          ..color = const Color(0xFFFC9520)
+          ..strokeWidth = 2
           ..isAntiAlias = true
-          ..style = PaintingStyle.fill;
+          ..style = PaintingStyle.stroke;
     if (isTimelineView) {
       final double viewSize = size.width / visibleDates.length;
       double startXPosition = (index * viewSize) + currentTimePosition;
       if (isRTL) {
         startXPosition = size.width - startXPosition;
       }
-      canvas.drawCircle(Offset(startXPosition, 5), 5, painter);
       canvas.drawLine(
         Offset(startXPosition, 0),
         Offset(startXPosition, size.height),
@@ -15010,13 +15075,47 @@ class _CurrentTimeIndicator extends CustomPainter {
         viewEndPosition = size.width - viewEndPosition;
         startXPosition = size.width - startXPosition;
       }
-      canvas.drawCircle(Offset(startXPosition, startYPosition), 5, painter);
+      canvas.drawLine(
+        Offset(startXPosition, startYPosition - 7.5),
+        Offset(startXPosition, startYPosition + 7.5),
+        painter,
+      );
       canvas.drawLine(
         Offset(viewStartPosition, startYPosition),
         Offset(viewEndPosition, startYPosition),
         painter,
       );
+
+      final TextPainter textPainter = TextPainter(
+        text: TextSpan(
+          text: _formatTime(getLocationDateTime),
+          style: const TextStyle(
+            color: Color(0xFFFC9520),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+
+      );
+      textPainter.layout();
+
+      final double textXPosition = isRTL
+          ? timeRulerSize - textPainter.width - 5
+          : timeRulerSize - textPainter.width - 5;
+      final double textYPosition = startYPosition - (textPainter.height / 2);
+
+      textPainter.paint(canvas, Offset(textXPosition, textYPosition));
     }
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final hour = dateTime.hour > 12
+        ? dateTime.hour - 12
+        : (dateTime.hour == 0 ? 12 : dateTime.hour);
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final period = dateTime.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
   }
 
   @override

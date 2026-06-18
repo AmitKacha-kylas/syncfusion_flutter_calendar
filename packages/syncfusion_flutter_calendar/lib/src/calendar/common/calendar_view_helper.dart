@@ -528,6 +528,7 @@ class CalendarViewHelper {
 
     switch (view) {
       case CalendarView.day:
+        return 0;
       case CalendarView.week:
       case CalendarView.workWeek:
         return 60;

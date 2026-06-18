@@ -7853,7 +7853,7 @@ class _SfCalendarState extends State<SfCalendar>
             ),
           ),
           Positioned(
-            top: widget.headerHeight,
+            top: widget.view == CalendarView.day ? 0 : widget.headerHeight,
             left: 0,
             right: 0,
             height: height,
@@ -8829,7 +8829,7 @@ class _SfCalendarState extends State<SfCalendar>
         ),
       ),
       Positioned(
-        top: widget.headerHeight,
+        top: widget.view == CalendarView.day ? 0 : widget.headerHeight,
         left: 0,
         right: 0,
         height: height,
@@ -9502,7 +9502,7 @@ class _SfCalendarState extends State<SfCalendar>
     double agendaHeight,
   ) {
     return Positioned(
-      top: top,
+      top: widget.view == CalendarView.day ? 0 : top,
       left: isResourceEnabled && !isRTL ? resourceViewSize : 0,
       right: isResourceEnabled && isRTL ? resourceViewSize : 0,
       height: height - agendaHeight,
@@ -9562,9 +9562,10 @@ class _SfCalendarState extends State<SfCalendar>
         left: 0,
         height: widget.headerHeight,
         child: Container(
-          color:
-              widget.headerStyle.backgroundColor ??
-              _calendarTheme.headerBackgroundColor,
+          color: widget.view == CalendarView.day
+              ? Colors.transparent
+              : (widget.headerStyle.backgroundColor ??
+                  _calendarTheme.headerBackgroundColor),
           child: _CalendarHeaderView(
             _currentViewVisibleDates,
             widget.headerStyle,
@@ -10971,7 +10972,7 @@ class _CalendarHeaderViewState extends State<_CalendarHeaderView> {
               alignment: Alignment.center,
               color: headerBackgroundColor,
               width: isCenterAlignment && headerWidth > 200 ? 200 : headerWidth,
-              height: headerHeight,
+              height: widget.view == CalendarView.day ? 0 : headerHeight,
               padding: const EdgeInsets.all(2),
               child: Material(
                 color: headerBackgroundColor,
@@ -11007,7 +11008,9 @@ class _CalendarHeaderViewState extends State<_CalendarHeaderView> {
                             : headerWidth,
                     height: headerHeight,
                     alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    padding: widget.view == CalendarView.day
+                        ? EdgeInsets.zero
+                        : const EdgeInsets.symmetric(horizontal: 5),
                     child: Row(
                       mainAxisAlignment: getAlignmentFromTextAlign(),
                       children:
@@ -11061,7 +11064,7 @@ class _CalendarHeaderViewState extends State<_CalendarHeaderView> {
               alignment: getHeaderAlignment(),
               color: headerBackgroundColor,
               width: isCenterAlignment && headerWidth > 200 ? 200 : headerWidth,
-              height: headerHeight,
+              height: widget.view == CalendarView.day ? 0 : headerHeight,
               padding: const EdgeInsets.all(2),
               child: Material(
                 color: headerBackgroundColor,
@@ -11105,7 +11108,9 @@ class _CalendarHeaderViewState extends State<_CalendarHeaderView> {
                         padding,
                     height: headerHeight,
                     alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    padding: widget.view == CalendarView.day
+                        ? EdgeInsets.zero
+                        : const EdgeInsets.symmetric(horizontal: 5),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children:
@@ -11745,6 +11750,9 @@ class _CalendarHeaderViewState extends State<_CalendarHeaderView> {
           return '${DateFormat(monthFormat, widget.locale).format(widget.currentDate!)} ${widget.currentDate!.year}';
         }
       case CalendarView.day:
+        {
+          return '';
+        }
       case CalendarView.week:
       case CalendarView.workWeek:
         {
@@ -12479,7 +12487,7 @@ class _CustomSplash extends InteractiveInkFeature {
 
     if (_clipCallback != null) {
       /// Clip and draw the rect with fade animation value on canvas.
-      final Rect rect = _clipCallback();
+      final Rect rect = _clipCallback!();
       if (_borderRadius != BorderRadius.zero) {
         final RRect roundedRect = RRect.fromRectAndCorners(
           rect,
