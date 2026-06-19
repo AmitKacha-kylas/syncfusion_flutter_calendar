@@ -2,133 +2,202 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 void main() {
-  return runApp(const CalendarApp());
+  runApp(const CalendarApp());
 }
 
-/// The app which hosts the home page which contains the calendar on it.
+/// The app which hosts the integrated calendar
 class CalendarApp extends StatelessWidget {
   const CalendarApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(title: 'Calendar Demo', home: MyHomePage());
+    return MaterialApp(
+      title: 'Integrated Calendar Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      home: const IntegratedCalendarPage(),
+    );
   }
 }
 
-/// The hove page which hosts the calendar
-class MyHomePage extends StatefulWidget {
-  /// Creates the home page to display teh calendar widget.
-  const MyHomePage({Key? key}) : super(key: key);
+/// Page displaying the integrated calendar
+class IntegratedCalendarPage extends StatefulWidget {
+  const IntegratedCalendarPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
-  _MyHomePageState createState() => _MyHomePageState();
+  State<IntegratedCalendarPage> createState() => _IntegratedCalendarPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _IntegratedCalendarPageState extends State<IntegratedCalendarPage> {
+  late List<Appointment> appointments;
+  late DateTime selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedDate = DateTime.now();
+    appointments = _generateSampleAppointments();
+  }
+
+  List<Appointment> _generateSampleAppointments() {
+    final DateTime today = DateTime.now();
+    final List<Appointment> meetingList = <Appointment>[];
+
+    // Today's appointments
+    meetingList.add(
+      Appointment(
+        subject: 'Team Meeting',
+        startTime: DateTime(today.year, today.month, today.day, 9),
+        endTime: DateTime(today.year, today.month, today.day, 10),
+        color: const Color(0xFF0F8644),
+      ),
+    );
+
+    meetingList.add(
+      Appointment(
+        subject: 'Project Review',
+        startTime: DateTime(today.year, today.month, today.day, 14),
+        endTime: DateTime(today.year, today.month, today.day, 15, 30),
+        color: const Color(0xFF8B3A62),
+      ),
+    );
+
+    // Tomorrow's appointments
+    final DateTime tomorrow = today.add(const Duration(days: 1));
+    meetingList.add(
+      Appointment(
+        subject: 'Client Call',
+        startTime: DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 10),
+        endTime: DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 11),
+        color: const Color(0xFF0F8644),
+      ),
+    );
+
+    // Day 3
+    final DateTime dayThree = today.add(const Duration(days: 3));
+    meetingList.add(
+      Appointment(
+        subject: 'Design Sprint',
+        startTime: DateTime(dayThree.year, dayThree.month, dayThree.day, 9),
+        endTime: DateTime(dayThree.year, dayThree.month, dayThree.day, 12),
+        color: const Color(0xFFFF6B00),
+      ),
+    );
+
+    meetingList.add(
+      Appointment(
+        subject: 'Lunch with Team',
+        startTime: DateTime(dayThree.year, dayThree.month, dayThree.day, 12),
+        endTime: DateTime(dayThree.year, dayThree.month, dayThree.day, 13),
+        color: const Color(0xFFFFA500),
+      ),
+    );
+
+    // Day 5
+    final DateTime dayFive = today.add(const Duration(days: 5));
+    meetingList.add(
+      Appointment(
+        subject: 'Sprint Planning',
+        startTime: DateTime(dayFive.year, dayFive.month, dayFive.day, 10),
+        endTime: DateTime(dayFive.year, dayFive.month, dayFive.day, 11, 30),
+        color: const Color(0xFF0F8644),
+      ),
+    );
+
+    // Day 7
+    final DateTime daySeven = today.add(const Duration(days: 7));
+    meetingList.add(
+      Appointment(
+        subject: 'Weekly Sync',
+        startTime: DateTime(daySeven.year, daySeven.month, daySeven.day, 9),
+        endTime: DateTime(daySeven.year, daySeven.month, daySeven.day, 10),
+        color: const Color(0xFF8B3A62),
+      ),
+    );
+
+    return meetingList;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Text("shoowww"),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: SfCalendar(
-                  timeSlotViewSettings: const TimeSlotViewSettings(
-                    timeInterval: Duration(minutes: 30),
-
-                    timeIntervalHeight: 90,
-                  ),
-                  dataSource: MeetingDataSource(_getDataSource()),
-
-                ),
-              ),
-            ),
-          ],
-        ),
+      appBar: AppBar(
+        title: const Text('Integrated Calendar'),
+        elevation: 2,
+      ),
+      body: IntegratedMonthCalendar(
+        dataSource: AppointmentDataSource(appointments),
+        onDateSelected: (date) {
+          setState(() {
+            selectedDate = date;
+          });
+          _showDateInfo(date);
+        },
       ),
     );
   }
 
-  List<Meeting> _getDataSource() {
-    final List<Meeting> meetings = <Meeting>[];
-    final DateTime today = DateTime.now();
-    final DateTime startTime = DateTime(today.year, today.month, today.day, 9);
-    final DateTime endTime = startTime.add(const Duration(hours: 2));
-    meetings.add(
-      Meeting('Conference', startTime, endTime, const Color(0xFF0F8644), false),
+  void _showDateInfo(DateTime date) {
+    final eventsOnDate = appointments
+        .where((apt) =>
+            apt.startTime.year == date.year &&
+            apt.startTime.month == date.month &&
+            apt.startTime.day == date.day)
+        .toList();
+
+    final dateStr = '${date.day}/${date.month}/${date.year}';
+    final eventCount = eventsOnDate.length;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          eventCount > 0
+              ? '$dateStr: $eventCount event(s)'
+              : '$dateStr: No events',
+        ),
+        duration: const Duration(seconds: 2),
+      ),
     );
-    return meetings;
   }
 }
 
-/// An object to set the appointment collection data source to calendar, which
-/// used to map the custom appointment data to the calendar appointment, and
-/// allows to add, remove or reset the appointment collection.
-class MeetingDataSource extends CalendarDataSource {
-  /// Creates a meeting data source, which used to set the appointment
-  /// collection to the calendar
-  MeetingDataSource(List<Meeting> source) {
+/// Custom appointment data source
+class AppointmentDataSource extends CalendarDataSource {
+  AppointmentDataSource(List<Appointment> source) {
     appointments = source;
   }
 
   @override
-  DateTime getStartTime(int index) {
-    return _getMeetingData(index).from;
-  }
+  DateTime getStartTime(int index) => appointments![index].startTime;
 
   @override
-  DateTime getEndTime(int index) {
-    return _getMeetingData(index).to;
-  }
+  DateTime getEndTime(int index) => appointments![index].endTime;
 
   @override
-  String getSubject(int index) {
-    return _getMeetingData(index).eventName;
-  }
+  String getSubject(int index) => appointments![index].subject;
 
   @override
-  Color getColor(int index) {
-    return _getMeetingData(index).background;
-  }
+  Color getColor(int index) => appointments![index].color;
 
   @override
-  bool isAllDay(int index) {
-    return _getMeetingData(index).isAllDay;
-  }
-
-  Meeting _getMeetingData(int index) {
-    final dynamic meeting = appointments![index];
-    late final Meeting meetingData;
-    if (meeting is Meeting) {
-      meetingData = meeting;
-    }
-
-    return meetingData;
-  }
+  bool isAllDay(int index) => appointments![index].isAllDay ?? false;
 }
 
-/// Custom business object class which contains properties to hold the detailed
-/// information about the event data which will be rendered in calendar.
-class Meeting {
-  /// Creates a meeting class with required details.
-  Meeting(this.eventName, this.from, this.to, this.background, this.isAllDay);
+/// Custom appointment class
+class Appointment {
+  Appointment({
+    required this.subject,
+    required this.startTime,
+    required this.endTime,
+    required this.color,
+    this.isAllDay = false,
+  });
 
-  /// Event name which is equivalent to subject property of [Appointment].
-  String eventName;
-
-  /// From which is equivalent to start time property of [Appointment].
-  DateTime from;
-
-  /// To which is equivalent to end time property of [Appointment].
-  DateTime to;
-
-  /// Background which is equivalent to color property of [Appointment].
-  Color background;
-
-  /// IsAllDay which is equivalent to isAllDay property of [Appointment].
-  bool isAllDay;
+  final String subject;
+  final DateTime startTime;
+  final DateTime endTime;
+  final Color color;
+  final bool? isAllDay;
 }

@@ -15,6 +15,8 @@ export 'src/calendar/appointment_engine/recurrence_properties.dart';
 export 'src/calendar/common/calendar_controller.dart';
 export 'src/calendar/common/enums.dart';
 export 'src/calendar/common/event_args.dart';
+export 'src/calendar/custom_month_calendar.dart';
+export 'src/calendar/integrated_month_calendar.dart';
 export 'src/calendar/resource_view/calendar_resource.dart';
 export 'src/calendar/settings/drag_and_drop_settings.dart';
 export 'src/calendar/settings/header_style.dart';
