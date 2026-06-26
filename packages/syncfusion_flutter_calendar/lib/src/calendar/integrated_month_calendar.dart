@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_core/theme.dart';
 
 import 'appointment_engine/calendar_datasource.dart';
 import 'common/calendar_controller.dart';
@@ -392,10 +393,7 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
             ),
             if (widget.dayViewTopWidget != null) widget.dayViewTopWidget!,
             Expanded(
-              child: ColoredBox(
-                color: Colors.white,
-                child: _buildSfCalendar(),
-              ),
+              child: _buildSfCalendar(),
             ),
           ],
         );
@@ -413,7 +411,7 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
     final minDate = widget.minDate ?? DateTime(01);
     final maxDate = widget.maxDate ?? DateTime(9999, 12, 31);
 
-    return SfCalendar(
+    final calendar = SfCalendar(
       dataSource: _FilteredDataSource(
         widget.dataSource,
         selectedDate,
@@ -474,6 +472,11 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
       onDragEnd: widget.onDragEnd,
       minDate: minDate,
       maxDate: maxDate,
+    );
+
+    return SfCalendarTheme(
+      data: SfCalendarTheme.of(context),
+      child: calendar,
     );
   }
 }
