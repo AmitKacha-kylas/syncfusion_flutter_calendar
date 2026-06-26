@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:syncfusion_flutter_core/theme.dart';
 
 enum NavigationMode { monthly, weekly }
 
@@ -216,6 +217,17 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
     final days = _getDaysInMonth(_displayedMonth);
     final headerText = _getHeaderText();
 
+    // Get theme colors
+    final themeData = Theme.of(context);
+    final calendarTheme = SfCalendarTheme.of(context);
+
+    // Theme-based colors
+    final primaryColor = calendarTheme.todayHighlightColor ?? const Color(0xFF5B6EFF);
+    final primaryColorLight = calendarTheme.headerBackgroundColor ?? const Color(0xFFEBF3FF);
+    final textColorPrimary = themeData.brightness == Brightness.dark ? Colors.white : Colors.black87;
+    final textColorSecondary = themeData.brightness == Brightness.dark ? Colors.grey[400] : const Color(0xFF687790);
+    final backgroundColor = calendarTheme.activeDatesBackgroundColor ?? const Color(0xFFf5f5f5);
+
     return GestureDetector(
       onHorizontalDragEnd: (details) {
         if (_showYearPickerView || details.primaryVelocity == null) {
@@ -281,8 +293,8 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
                               return Container(
                                 decoration: BoxDecoration(
                                     color: isSelectedToday
-                                        ? const Color(0xFFEBF3FF)
-                                        : const Color(0xFFf5f5f5),
+                                        ? primaryColorLight
+                                        : backgroundColor,
                                     borderRadius: BorderRadius.circular(20)),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 5,
@@ -292,8 +304,8 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
                                   'Today',
                                   style: TextStyle(
                                     color: isSelectedToday
-                                        ? const Color(0xFF006DEE)
-                                        : const Color(0xFF687790),
+                                        ? primaryColor
+                                        : textColorSecondary,
                                   ),
                                 ),
                               );
@@ -317,6 +329,8 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
                   selectedYear:
                       widget.selectedDate?.year ?? _displayedMonth.year,
                   onYearSelected: _selectYear,
+                  primaryColor: primaryColor,
+                  textColorPrimary: textColorPrimary,
                 )
               else ...[
                 // Day labels
@@ -340,8 +354,8 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
                       return Center(
                         child: Text(
                           day,
-                          style: const TextStyle(
-                            color: Colors.grey,
+                          style: TextStyle(
+                            color: textColorSecondary,
                             fontWeight: FontWeight.w500,
                             fontSize: 12,
                           ),
@@ -384,8 +398,8 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
                                   Container(
                                     width: 36,
                                     height: 36,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFF5B6EFF),
+                                    decoration: BoxDecoration(
+                                      color: primaryColor,
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -395,9 +409,9 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
                                     width: 36,
                                     height: 36,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF5B6EFF).withOpacity(0.2),
+                                      color: primaryColor.withValues(alpha: 0.2),
                                       border: Border.all(
-                                        color: const Color(0xFF5B6EFF),
+                                        color: primaryColor,
                                         width: 1.5,
                                       ),
                                       shape: BoxShape.circle,
@@ -411,8 +425,8 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
                                     color: isSelected
                                         ? Colors.white
                                         : isCurrentMonth
-                                            ? Colors.black87
-                                            : Colors.grey[400],
+                                            ? textColorPrimary
+                                            : textColorSecondary,
                                   ),
                                 ),
                               ],
@@ -425,7 +439,7 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
                                 height: 4,
                                 decoration: BoxDecoration(
                                   color: (hasEvent && !isCurrent) || isCurrent
-                                      ? const Color(0xFF5B6EFF)
+                                      ? primaryColor
                                       : Colors.transparent,
                                   shape: BoxShape.circle,
                                 ),
@@ -450,10 +464,14 @@ class _YearPickerView extends StatefulWidget {
   const _YearPickerView({
     required this.selectedYear,
     required this.onYearSelected,
+    required this.primaryColor,
+    required this.textColorPrimary,
   });
 
   final int selectedYear;
   final Function(int) onYearSelected;
+  final Color primaryColor;
+  final Color textColorPrimary;
 
   @override
   State<_YearPickerView> createState() => _YearPickerViewState();
@@ -527,7 +545,7 @@ class _YearPickerViewState extends State<_YearPickerView> {
                     height: 30,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFF006DEE)
+                          ? widget.primaryColor
                           : Colors.transparent,
                       borderRadius: const BorderRadius.all(
                         Radius.circular(20),
@@ -538,7 +556,7 @@ class _YearPickerViewState extends State<_YearPickerView> {
                       year.toString(),
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
-                        color: isSelected ? Colors.white : Colors.black87,
+                        color: isSelected ? Colors.white : widget.textColorPrimary,
                       ),
                     ),
                   ),

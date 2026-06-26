@@ -368,28 +368,38 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
                 ),
               ),
             ),
-            GestureDetector(
-              onVerticalDragStart: _onVerticalDragStart,
-              onVerticalDragUpdate: _onVerticalDragUpdate,
-              onVerticalDragEnd: _onVerticalDragEnd,
-              child: MouseRegion(
-                cursor: SystemMouseCursors.resizeRow,
-                child: Container(
-                  height: dragHandleHeight,
-                  color: Colors.white,
-                  margin: const EdgeInsets.symmetric(vertical: 10),
-                  child: Center(
+            Builder(
+              builder: (context) {
+                final calendarTheme = SfCalendarTheme.of(context);
+                final handleBackgroundColor =
+                    calendarTheme.headerBackgroundColor ?? Colors.white;
+                final handleIndicatorColor =
+                    calendarTheme.cellBorderColor ?? Colors.grey[400];
+
+                return GestureDetector(
+                  onVerticalDragStart: _onVerticalDragStart,
+                  onVerticalDragUpdate: _onVerticalDragUpdate,
+                  onVerticalDragEnd: _onVerticalDragEnd,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.resizeRow,
                     child: Container(
-                      width: 50,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(2),
+                      height: dragHandleHeight,
+                      color: handleBackgroundColor,
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      child: Center(
+                        child: Container(
+                          width: 50,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: handleIndicatorColor,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
             if (widget.dayViewTopWidget != null) widget.dayViewTopWidget!,
             Expanded(
