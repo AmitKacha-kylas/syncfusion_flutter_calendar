@@ -90,6 +90,10 @@ class IntegratedMonthCalendar extends StatefulWidget {
     this.minDate,
     this.maxDate,
     this.dayViewTopWidget,
+    this.minMonthCalendarHeight = 120,
+    this.maxMonthCalendarHeight = 600,
+    this.minDayViewHeight = 150,
+    this.maxDayViewHeight = 600,
   }) : super(key: key);
 
   /// Calendar data source containing all appointments/events
@@ -269,6 +273,18 @@ class IntegratedMonthCalendar extends StatefulWidget {
   /// Optional widget to display above the day view calendar
   final Widget? dayViewTopWidget;
 
+  /// Minimum height for the month calendar view
+  final double minMonthCalendarHeight;
+
+  /// Maximum height for the month calendar view
+  final double maxMonthCalendarHeight;
+
+  /// Minimum height for the day view calendar
+  final double minDayViewHeight;
+
+  /// Maximum height for the day view calendar
+  final double maxDayViewHeight;
+
   @override
   State<IntegratedMonthCalendar> createState() =>
       _IntegratedMonthCalendarState();
@@ -295,8 +311,14 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
     setState(() {
       monthCalendarHeight += details.delta.dy;
       dayViewHeight -= details.delta.dy;
-      monthCalendarHeight = monthCalendarHeight.clamp(120, 600);
-      dayViewHeight = dayViewHeight.clamp(450, 600);
+      monthCalendarHeight = monthCalendarHeight.clamp(
+        widget.minMonthCalendarHeight,
+        widget.maxMonthCalendarHeight,
+      );
+      dayViewHeight = dayViewHeight.clamp(
+        widget.minDayViewHeight,
+        widget.maxDayViewHeight,
+      );
     });
   }
 

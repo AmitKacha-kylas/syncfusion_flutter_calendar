@@ -225,6 +225,7 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
     final primaryColor = calendarTheme.todayHighlightColor ?? const Color(0xFF5B6EFF);
     final primaryColorLight = calendarTheme.headerBackgroundColor ?? const Color(0xFFEBF3FF);
     final textColorPrimary = themeData.brightness == Brightness.dark ? Colors.white : Colors.black87;
+    final selectedTextColor = themeData.brightness != Brightness.dark ? Colors.white : Colors.black87;
     final textColorSecondary = themeData.brightness == Brightness.dark ? Colors.grey[400] : const Color(0xFF687790);
     final backgroundColor = calendarTheme.activeDatesBackgroundColor ?? const Color(0xFFf5f5f5);
 
@@ -423,7 +424,7 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                     color: isSelected
-                                        ? Colors.white
+                                        ? selectedTextColor
                                         : isCurrentMonth
                                             ? textColorPrimary
                                             : textColorSecondary,
