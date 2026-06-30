@@ -348,12 +348,12 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
       builder: (context, constraints) {
         final totalHeight = constraints.maxHeight;
         const dragHandleHeight = 12.0;
-        final availableHeight = totalHeight - dragHandleHeight;
+        final availableHeight = totalHeight - dragHandleHeight + 70;
 
         final ratio = monthCalendarHeight / (monthCalendarHeight + dayViewHeight);
         var monthHeight = availableHeight * ratio;
 
-        monthHeight = monthHeight.clamp(100.0, availableHeight - 150);
+        monthHeight = monthHeight.clamp(150.0, availableHeight);
 
         final navigationMode = _isWeekMode(monthHeight)
             ? month_cal.NavigationMode.weekly
