@@ -597,7 +597,7 @@ class _CustomCalendarScrollViewState extends State<CustomCalendarScrollView>
         }
       },
       onHorizontalDragStart:
-          isTimelineView
+          isTimelineView || isDayView
               ? null
               : (DragStartDetails dragStartDetails) {
                 _onHorizontalStart(
@@ -610,7 +610,7 @@ class _CustomCalendarScrollViewState extends State<CustomCalendarScrollView>
                 );
               },
       onHorizontalDragUpdate:
-          isTimelineView
+          isTimelineView || isDayView
               ? null
               : (DragUpdateDetails dragUpdateDetails) {
                 _onHorizontalUpdate(
@@ -626,7 +626,7 @@ class _CustomCalendarScrollViewState extends State<CustomCalendarScrollView>
                 );
               },
       onHorizontalDragEnd:
-          isTimelineView
+          isTimelineView || isDayView
               ? null
               : (DragEndDetails dragEndDetails) {
                 _onHorizontalEnd(
