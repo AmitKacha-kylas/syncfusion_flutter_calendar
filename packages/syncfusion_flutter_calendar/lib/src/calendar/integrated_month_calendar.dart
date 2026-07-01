@@ -45,7 +45,6 @@ class IntegratedMonthCalendar extends StatefulWidget {
     this.onTap,
     this.onLongPress,
     this.onSelectionChanged,
-    this.controller,
     this.appointmentTimeTextFormat,
     this.blackoutDates,
     this.scheduleViewMonthHeaderBuilder,
@@ -150,9 +149,6 @@ class IntegratedMonthCalendar extends StatefulWidget {
 
   /// Called when the selection is changed
   final CalendarSelectionChangedCallback? onSelectionChanged;
-
-  /// The controller for the calendar
-  final CalendarController? controller;
 
   /// The appointment time text format
   final String? appointmentTimeTextFormat;
@@ -302,12 +298,14 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
   month_cal.NavigationMode _previousNavigationMode =
       month_cal.NavigationMode.monthly;
   final _calendarKey = GlobalKey();
+  late CalendarController _calendarController;
 
   @override
   void initState() {
     super.initState();
     selectedDate = DateTime.now();
     eventDates = _extractEventDates();
+    _calendarController = CalendarController();
   }
 
   void _onVerticalDragStart(DragStartDetails details) {}
@@ -352,7 +350,7 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
       builder: (context, constraints) {
         final totalHeight = constraints.maxHeight;
         const dragHandleHeight = 12.0;
-        const dragHandleMargin = 208.0;
+        const dragHandleMargin = 188.0;
         final availableHeight =
             totalHeight - dragHandleHeight - dragHandleMargin;
 
@@ -453,6 +451,10 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
     final minDate = widget.minDate ?? DateTime(01);
     final maxDate = widget.maxDate ?? DateTime(9999, 12, 31);
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _calendarController.displayDate = selectedDate;
+    });
+
     final calendar = SfCalendar(
       dataSource: _FilteredDataSource(
         widget.dataSource,
@@ -472,7 +474,7 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
       onTap: widget.onTap,
       onLongPress: widget.onLongPress,
       onSelectionChanged: widget.onSelectionChanged,
-      controller: widget.controller,
+      controller: _calendarController,
       appointmentTimeTextFormat: widget.appointmentTimeTextFormat,
       blackoutDates: widget.blackoutDates,
       scheduleViewMonthHeaderBuilder: widget.scheduleViewMonthHeaderBuilder,
