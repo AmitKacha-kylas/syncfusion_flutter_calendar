@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
@@ -34,8 +36,8 @@ class CustomMonthCalendar extends StatefulWidget {
   /// Callback when a date is selected
   final Function(DateTime)? onDateSelected;
 
-  /// Callback when month is changed
-  final Function(DateTime)? onMonthChanged;
+  /// Callback when month is changed, provides 'from' and 'to' dates of the grid
+  final Function(DateTime from, DateTime to)? onMonthChanged;
 
   /// Navigation mode: weekly (7 days) or monthly
   final NavigationMode navigationMode;
@@ -47,6 +49,7 @@ class CustomMonthCalendar extends StatefulWidget {
 class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
   late DateTime _displayedMonth;
   bool _showYearPickerView = false;
+  Timer? _monthChangeDebounceTimer;
 
   @override
   void initState() {
@@ -54,12 +57,18 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
     _displayedMonth = DateTime.now();
   }
 
+  @override
+  void dispose() {
+    _monthChangeDebounceTimer?.cancel();
+    super.dispose();
+  }
+
   /// Navigate to the week containing the specified date
   void navigateToDate(DateTime date) {
     setState(() {
       _displayedMonth = date;
     });
-    widget.onMonthChanged?.call(_displayedMonth);
+    _debounceMonthChange();
   }
 
   void _goToPreviousMonth() {
@@ -70,7 +79,7 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
       _displayedMonth =
           DateTime(_displayedMonth.year, _displayedMonth.month - 1);
     });
-    widget.onMonthChanged?.call(_displayedMonth);
+    _debounceMonthChange();
   }
 
   void _goToNextMonth() {
@@ -81,7 +90,7 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
       _displayedMonth =
           DateTime(_displayedMonth.year, _displayedMonth.month + 1);
     });
-    widget.onMonthChanged?.call(_displayedMonth);
+    _debounceMonthChange();
   }
 
   void _goToPreviousWeek() {
@@ -91,7 +100,7 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
     setState(() {
       _displayedMonth = _displayedMonth.subtract(const Duration(days: 7));
     });
-    widget.onMonthChanged?.call(_displayedMonth);
+    _debounceMonthChange();
   }
 
   void _goToNextWeek() {
@@ -101,7 +110,7 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
     setState(() {
       _displayedMonth = _displayedMonth.add(const Duration(days: 7));
     });
-    widget.onMonthChanged?.call(_displayedMonth);
+    _debounceMonthChange();
   }
 
   void _goToToday() {
@@ -110,16 +119,22 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
       _showYearPickerView = false;
       _displayedMonth = today;
     });
-    widget.onMonthChanged?.call(_displayedMonth);
+    _debounceMonthChange();
     widget.onDateSelected?.call(today);
   }
 
+  /// Get all dates in the calendar grid for a given month
+  /// Returns list of 42 days (6 weeks) including days from adjacent months
+  /// In weekly mode, returns only 7 days of the current week
   List<DateTime> _getDaysInMonth(DateTime month) {
     // In weekly mode, return only the 7 days of the current week
     if (widget.navigationMode == NavigationMode.weekly) {
       return _getWeekDays(month);
     }
+    return getDaysInGrid(month);
+  }
 
+  List<DateTime> getDaysInGrid(DateTime month) {
     // In monthly mode, return full month calendar (42 days)
     final first = DateTime(month.year, month.month);
     final last = DateTime(month.year, month.month + 1, 0);
@@ -147,6 +162,18 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
 
     // Return 7 consecutive days starting from Sunday
     return List.generate(7, (index) => weekStart.add(Duration(days: index)));
+  }
+
+  void _debounceMonthChange(){
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _monthChangeDebounceTimer?.cancel();
+      _monthChangeDebounceTimer = Timer(const Duration(milliseconds: 400), () {
+        if (mounted) {
+          final days = getDaysInGrid(_displayedMonth);
+          widget.onMonthChanged?.call(days.first, days.last);
+        }
+      });
+    });
   }
 
   bool _isCurrentDate(DateTime date) {
@@ -196,7 +223,8 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
       if (_showYearPickerView) {
         _showYearPickerView = false;
         if (widget.selectedDate != null) {
-          _displayedMonth = DateTime(widget.selectedDate!.year, widget.selectedDate!.month);
+          _displayedMonth =
+              DateTime(widget.selectedDate!.year, widget.selectedDate!.month);
         }
       } else {
         _showYearPickerView = true;
@@ -209,7 +237,7 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
       _displayedMonth = DateTime(year, _displayedMonth.month);
       _showYearPickerView = false;
     });
-    widget.onMonthChanged?.call(_displayedMonth);
+    _debounceMonthChange();
   }
 
   @override
@@ -222,12 +250,19 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
     final calendarTheme = SfCalendarTheme.of(context);
 
     // Theme-based colors
-    final primaryColor = calendarTheme.todayHighlightColor ?? const Color(0xFF5B6EFF);
-    final primaryColorLight = calendarTheme.headerBackgroundColor ?? const Color(0xFFEBF3FF);
-    final textColorPrimary = themeData.brightness == Brightness.dark ? Colors.white : Colors.black87;
-    final selectedTextColor = themeData.brightness != Brightness.dark ? Colors.white : Colors.black87;
-    final textColorSecondary = themeData.brightness == Brightness.dark ? Colors.grey[400] : const Color(0xFF687790);
-    final backgroundColor = calendarTheme.activeDatesBackgroundColor ?? const Color(0xFFf5f5f5);
+    final primaryColor =
+        calendarTheme.todayHighlightColor ?? const Color(0xFF5B6EFF);
+    final primaryColorLight =
+        calendarTheme.headerBackgroundColor ?? const Color(0xFFEBF3FF);
+    final textColorPrimary =
+        themeData.brightness == Brightness.dark ? Colors.white : Colors.black87;
+    final selectedTextColor =
+        themeData.brightness != Brightness.dark ? Colors.white : Colors.black87;
+    final textColorSecondary = themeData.brightness == Brightness.dark
+        ? Colors.grey[400]
+        : const Color(0xFF687790);
+    final backgroundColor =
+        calendarTheme.activeDatesBackgroundColor ?? const Color(0xFFf5f5f5);
 
     return GestureDetector(
       onHorizontalDragEnd: (details) {
@@ -410,7 +445,8 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
                                     width: 36,
                                     height: 36,
                                     decoration: BoxDecoration(
-                                      color: primaryColor.withValues(alpha: 0.2),
+                                      color:
+                                          primaryColor.withValues(alpha: 0.2),
                                       border: Border.all(
                                         color: primaryColor,
                                         width: 1.5,
@@ -545,9 +581,8 @@ class _YearPickerViewState extends State<_YearPickerView> {
                     width: 70,
                     height: 30,
                     decoration: BoxDecoration(
-                      color: isSelected
-                          ? widget.primaryColor
-                          : Colors.transparent,
+                      color:
+                          isSelected ? widget.primaryColor : Colors.transparent,
                       borderRadius: const BorderRadius.all(
                         Radius.circular(20),
                       ),
@@ -557,7 +592,8 @@ class _YearPickerViewState extends State<_YearPickerView> {
                       year.toString(),
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
-                        color: isSelected ? Colors.white : widget.textColorPrimary,
+                        color:
+                            isSelected ? Colors.white : widget.textColorPrimary,
                       ),
                     ),
                   ),

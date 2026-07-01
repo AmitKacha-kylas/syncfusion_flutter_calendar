@@ -29,6 +29,7 @@ class IntegratedMonthCalendar extends StatefulWidget {
     Key? key,
     required this.dataSource,
     this.onDateSelected,
+    this.onMonthChanged,
     this.timeSlotViewSettings,
     this.view = CalendarView.day,
     this.firstDayOfWeek = 7,
@@ -101,6 +102,9 @@ class IntegratedMonthCalendar extends StatefulWidget {
 
   /// Callback when a date is selected in the month calendar
   final Function(DateTime)? onDateSelected;
+
+  /// Callback when the visible month is changed in the month calendar, provides 'from' and 'to' dates
+  final Function(DateTime from, DateTime to)? onMonthChanged;
 
   /// Time slot view settings for SfCalendar (default: 30 min intervals)
   final TimeSlotViewSettings? timeSlotViewSettings;
@@ -295,7 +299,8 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
   late List<DateTime> eventDates;
   double monthCalendarHeight = 380;
   double dayViewHeight = 450;
-  month_cal.NavigationMode _previousNavigationMode = month_cal.NavigationMode.monthly;
+  month_cal.NavigationMode _previousNavigationMode =
+      month_cal.NavigationMode.monthly;
   final _calendarKey = GlobalKey();
 
   @override
@@ -341,15 +346,15 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
     return height <= 150;
   }
 
-
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalHeight = constraints.maxHeight;
         const dragHandleHeight = 12.0;
-        const dragHandleMargin = 200.0;
-        final availableHeight = totalHeight - dragHandleHeight - dragHandleMargin;
+        const dragHandleMargin = 208.0;
+        final availableHeight =
+            totalHeight - dragHandleHeight - dragHandleMargin;
 
         final ratio =
             monthCalendarHeight / (monthCalendarHeight + dayViewHeight);
@@ -388,6 +393,9 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
                       selectedDate = date;
                     });
                     widget.onDateSelected?.call(date);
+                  },
+                  onMonthChanged: (from, to) {
+                    widget.onMonthChanged?.call(from, to);
                   },
                 ),
               ),
