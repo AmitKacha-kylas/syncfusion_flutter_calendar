@@ -102,8 +102,8 @@ class IntegratedMonthCalendar extends StatefulWidget {
   /// Callback when a date is selected in the month calendar
   final Function(DateTime)? onDateSelected;
 
-  /// Callback when the visible month is changed in the month calendar, provides 'from' and 'to' dates
-  final Function(DateTime from, DateTime to)? onMonthChanged;
+  /// Callback when the visible month is changed in the month calendar, provides the displayed month and year
+  final Function(DateTime)? onMonthChanged;
 
   /// Time slot view settings for SfCalendar (default: 30 min intervals)
   final TimeSlotViewSettings? timeSlotViewSettings;
@@ -350,7 +350,7 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
       builder: (context, constraints) {
         final totalHeight = constraints.maxHeight;
         const dragHandleHeight = 12.0;
-        const dragHandleMargin = 188.0;
+        const dragHandleMargin = 175.0;
         final availableHeight =
             totalHeight - dragHandleHeight - dragHandleMargin;
 
@@ -392,8 +392,8 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
                     });
                     widget.onDateSelected?.call(date);
                   },
-                  onMonthChanged: (from, to) {
-                    widget.onMonthChanged?.call(from, to);
+                  onMonthChanged: (month) {
+                    widget.onMonthChanged?.call(month);
                   },
                 ),
               ),

@@ -36,8 +36,8 @@ class CustomMonthCalendar extends StatefulWidget {
   /// Callback when a date is selected
   final Function(DateTime)? onDateSelected;
 
-  /// Callback when month is changed, provides 'from' and 'to' dates of the grid
-  final Function(DateTime from, DateTime to)? onMonthChanged;
+  /// Callback when month is changed, provides the displayed month and year
+  final Function(DateTime)? onMonthChanged;
 
   /// Navigation mode: weekly (7 days) or monthly
   final NavigationMode navigationMode;
@@ -164,13 +164,12 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
     return List.generate(7, (index) => weekStart.add(Duration(days: index)));
   }
 
-  void _debounceMonthChange(){
+  void _debounceMonthChange() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _monthChangeDebounceTimer?.cancel();
       _monthChangeDebounceTimer = Timer(const Duration(milliseconds: 400), () {
         if (mounted) {
-          final days = getDaysInGrid(_displayedMonth);
-          widget.onMonthChanged?.call(days.first, days.last);
+          widget.onMonthChanged?.call(_displayedMonth);
         }
       });
     });
@@ -419,9 +418,11 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
 
                       return GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          widget.onDateSelected?.call(date);
-                        },
+                        onTap: isCurrentMonth
+                            ? () {
+                                widget.onDateSelected?.call(date);
+                              }
+                            : null,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
