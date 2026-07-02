@@ -476,7 +476,7 @@ class _CustomMonthCalendarState extends State<CustomMonthCalendar> {
                                 width: 4,
                                 height: 4,
                                 decoration: BoxDecoration(
-                                  color: (hasEvent && !isCurrent)
+                                  color: (hasEvent && !isCurrent) || isCurrent
                                       ? primaryColor
                                       : Colors.transparent,
                                   shape: BoxShape.circle,
