@@ -455,7 +455,7 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
       _calendarController.displayDate = selectedDate;
     });
 
-    final calendar = SfCalendar(
+   final calendar = SfCalendar(
       dataSource: _FilteredDataSource(
         widget.dataSource,
         selectedDate,
@@ -487,8 +487,8 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
       timeSlotViewSettings: timeSettings,
       resourceViewSettings: widget.resourceViewSettings,
       monthViewSettings: widget.monthViewSettings,
-      initialDisplayDate: widget.initialDisplayDate,
-      initialSelectedDate: widget.initialSelectedDate,
+      initialDisplayDate: selectedDate,
+      initialSelectedDate: selectedDate,
       scheduleViewSettings: widget.scheduleViewSettings,
       appointmentTextStyle: widget.appointmentTextStyle,
       showNavigationArrow: widget.showNavigationArrow,
