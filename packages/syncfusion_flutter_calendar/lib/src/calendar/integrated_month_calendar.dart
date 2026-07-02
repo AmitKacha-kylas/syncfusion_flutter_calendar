@@ -303,9 +303,19 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
   @override
   void initState() {
     super.initState();
-    selectedDate = DateTime.now();
+    selectedDate = widget.initialDisplayDate ?? DateTime.now();
     eventDates = _extractEventDates();
     _calendarController = CalendarController();
+  }
+
+  @override
+  void didUpdateWidget(IntegratedMonthCalendar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.dataSource != widget.dataSource) {
+      setState(() {
+        eventDates = _extractEventDates();
+      });
+    }
   }
 
   void _onVerticalDragStart(DragStartDetails details) {}
