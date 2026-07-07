@@ -498,7 +498,6 @@ class _IntegratedMonthCalendarState extends State<IntegratedMonthCalendar> {
       resourceViewSettings: widget.resourceViewSettings,
       monthViewSettings: widget.monthViewSettings,
       initialDisplayDate: selectedDate,
-      initialSelectedDate: selectedDate,
       scheduleViewSettings: widget.scheduleViewSettings,
       appointmentTextStyle: widget.appointmentTextStyle,
       showNavigationArrow: widget.showNavigationArrow,
