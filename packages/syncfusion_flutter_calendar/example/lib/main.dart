@@ -1,30 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
+import 'package:syncfusion_flutter_core/theme.dart';
 
 void main() {
   runApp(const CalendarApp());
 }
 
 /// The app which hosts the integrated calendar
-class CalendarApp extends StatelessWidget {
+class CalendarApp extends StatefulWidget {
   const CalendarApp({super.key});
+
+  @override
+  State<CalendarApp> createState() => _CalendarAppState();
+}
+
+class _CalendarAppState extends State<CalendarApp> {
+  bool _isDarkMode = false;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Integrated Calendar Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
         useMaterial3: true,
+        brightness: Brightness.light,
+        primarySwatch: Colors.yellow,
       ),
-      home: const IntegratedCalendarPage(),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        primarySwatch: Colors.blue,
+      ),
+      themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      home: IntegratedCalendarPage(
+        onThemeChanged: (isDark) {
+          setState(() {
+            _isDarkMode = isDark;
+          });
+        },
+        isDarkMode: _isDarkMode,
+      ),
     );
   }
 }
 
 /// Page displaying the integrated calendar
 class IntegratedCalendarPage extends StatefulWidget {
-  const IntegratedCalendarPage({Key? key}) : super(key: key);
+  const IntegratedCalendarPage({
+    Key? key,
+    required this.onThemeChanged,
+    required this.isDarkMode,
+  }) : super(key: key);
+
+  final Function(bool) onThemeChanged;
+  final bool isDarkMode;
 
   @override
   State<IntegratedCalendarPage> createState() => _IntegratedCalendarPageState();
@@ -33,12 +62,23 @@ class IntegratedCalendarPage extends StatefulWidget {
 class _IntegratedCalendarPageState extends State<IntegratedCalendarPage> {
   late List<Appointment> appointments;
   late DateTime selectedDate;
+  bool _isInitialBuild = true;
 
   @override
   void initState() {
     super.initState();
     selectedDate = DateTime.now();
     appointments = _generateSampleAppointments();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isInitialBuild) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _isInitialBuild = false;
+      });
+    }
   }
 
   List<Appointment> _generateSampleAppointments() {
@@ -120,21 +160,117 @@ class _IntegratedCalendarPageState extends State<IntegratedCalendarPage> {
     return meetingList;
   }
 
+  Widget appointmentView(
+    BuildContext context,
+    CalendarAppointmentDetails details,
+  ) {
+    final appointments = details.appointments.toList();
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: appointments.isNotEmpty
+          ? (appointments[0] as Appointment).color
+          : Colors.grey,
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Text(
+        appointments.isNotEmpty
+          ? (appointments[0] as Appointment).subject
+          : 'No event',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    // Define theme colors based on brightness
+    final primaryColor = isDarkMode ? const Color(0xFF60A5FA) : const Color(0xFF2563EB);
+
+    final calendarThemeData = SfCalendarThemeData(
+      backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+      headerBackgroundColor: isDarkMode
+          ? const Color(0xFF2A2A2A)
+          : const Color(0xFFF3F4F6),
+      todayHighlightColor: Colors.blueAccent,  // ← This is what CustomMonthCalendar reads!
+      selectionBorderColor: Colors.yellow,
+      cellBorderColor: isDarkMode
+          ? const Color(0xFF404040)
+          : const Color(0xFFE5E7EB),
+      activeDatesBackgroundColor: isDarkMode
+          ? const Color(0xFF262626)
+          : const Color(0xFFF9FAFB),
+      todayTextStyle: TextStyle(
+        color: isDarkMode ? Colors.white : Colors.black87,
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Integrated Calendar'),
+        title: const Text('Integrated Calendar with Theme'),
         elevation: 2,
+        actions: [
+          IconButton(
+            icon: Icon(widget.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            tooltip: 'Toggle Theme',
+            onPressed: () {
+              widget.onThemeChanged(!widget.isDarkMode);
+            },
+          ),
+        ],
       ),
-      body: IntegratedMonthCalendar(
-        dataSource: AppointmentDataSource(appointments),
-        onDateSelected: (date) {
-          setState(() {
-            selectedDate = date;
-          });
-          _showDateInfo(date);
-        },
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 38.0),
+            child: Text("sdfvdsfnv;lgbnl;rg"),
+          ),
+          Expanded(
+            child: SfCalendarTheme(
+              data: calendarThemeData,
+              child: IntegratedMonthCalendar(
+                key: ValueKey<bool>(widget.isDarkMode),
+                dataSource: AppointmentDataSource(appointments),
+                initialSelectedDate: null,
+                selectionDecoration: BoxDecoration(
+                  border: Border.all(color: Colors.yellow, width: 2),
+                  shape: BoxShape.circle,
+                ),
+                appointmentBuilder: appointmentView,
+                timeSlotViewSettings: const TimeSlotViewSettings(
+                  timeInterval: Duration(minutes: 30),
+                ),
+                onDateSelected: (date) {
+                  setState(() {
+                    selectedDate = date;
+                  });
+                  _showDateInfo(date);
+                },
+                onMonthChanged: (month) {
+                  print('Month changed: ${month.year}-${month.month}');
+                },
+                onSelectionChanged: (CalendarSelectionDetails details) {
+                  if (!_isInitialBuild && details.date != null) {
+                    DateTime startTime = details.date!;
+                    DateTime endTime = startTime.add(const Duration(minutes: 30));
+                    _handleThirtyMinSelection(startTime, endTime);
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -160,6 +296,17 @@ class _IntegratedCalendarPageState extends State<IntegratedCalendarPage> {
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  void _handleThirtyMinSelection(DateTime startTime, DateTime endTime) {
+    final timeStr = '${startTime.hour}:${startTime.minute.toString().padLeft(2, '0')} - ${endTime.hour}:${endTime.minute.toString().padLeft(2, '0')}';
+    print("timeStr===??? $timeStr");
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   SnackBar(
+    //     content: Text('30-min slot selected: $timeStr'),
+    //     duration: const Duration(seconds: 2),
+    //   ),
+    // );
   }
 }
 
